@@ -3,35 +3,125 @@
   <head>
     <title>player()</title>
     <style type="text/css">
+      body { background-color: #444; }
       #window {
         position: absolute; background-color: #444;
-        top: 0; bottom: 0; left: 0; right: 30%;
+        top: 0; bottom: 0; left: 0; right: 0;
       }
       #playlist {
         position: absolute; z-index: 1; background-color: #ddd;
         top: 0; bottom: 0; left: 70%; right: 0;
-        padding: 4px; text-align: left;
+        padding: 4px; text-align: center;
       }
-      #playlist > .files {
+      #playlist > #files {
         margin-top: 6px; padding-top: 6px; padding-right: 4px;
         border-top: #aaa solid 2px; text-align: right;
       }
+      #playlist > #files > div,
+      #bottomplaylist > div {
+        background-color: #bbb; border-radius: 4px;
+        border: #aaa solid 1px; padding: 8px; font-size: large;
+        margin-bottom: 1px;
+      }
+      #playlist > #files > div:hover,
+      #bottomplaylist > div:hover {
+        cursor: pointer; background-color: #fcb;
+      }
+
+      #playlist > #files > div.selected,
+      #bottomplaylist > div.selected {
+        background-color: #fc3;
+      }
+      #playlist > #files > div.selected:hover,
+      #bottomplaylist > div.selected:hover {
+        cursor: pointer; background-color: #fc7;
+      }
+
+
+      #playlist > #files > div > input,
+      #bottomplaylist > div > input {
+        text-align: right; border: #777 solid 1px; width: 85%;
+        float: right; margin-left: 5%; padding-right: 6px;
+      }
+      #playlist > #files.shifted > div > input { display: none; }
+
+/* not yet used -- select to edit the text !
+      #playlist > #files > div > input.selected {
+        text-align: left; border: #fc3 solid 1px;
+      }
+*/
       #playlist > .path { border: #fc3 solid 1px; width: 80%; }
       #playlist > .extension {
-        float: right; text-align: right; width: 14%;
+        float: right; text-align: right; width: 15%;
       }
       #playlist > .extension > input {
         border: #fc3 solid 1px; width: 95%;
       }
-      #playlist > .files > .item {
-        text-align: right; border: #777 solid 1px; width: 95%;
+      #playlist > .prevnext {
+        border-top: #aaa solid 2px;
+        margin-top: 4px; padding-top: 4px;
       }
-      #playlist > .files > .selected {
-        text-align: left; border: #fc3 solid 1px;
+      #bottomplaylist {
+        position: absolute; border-top: #aaa solid 2px;
+        left: 0; right: 0; bottom: 0; z-index: 2;
+        background-color: #ddd;
       }
     </style>
     <script type="text/javascript">
       function id(id) { return document.getElementById(id); }
+      var keys = null;
+      function key(e) {
+        if (!e) { console.log('no event for key event'); return; }
+        var code = e.keyCode;
+        if (code >= 48 && code <= 57) {
+          if (!keys) {
+            if (code == 48) { keys = []; } // read a sequence
+            else { next(code - 48); } // set to file 1-9
+          } else { keys.push(code - 48); } // append sequence
+        } else if (keys) {
+          if (code == 13) { // enter key registers key
+            var key = keys.join('');
+            console.log('key is ' + key);
+            next(key); // is it a number or a string?
+            keys = null; // reset mode
+          } else { keys = null; } // anything else resets mode
+        }
+      }
+      function size(e) {
+        var playlist = id('playlist');
+        var player   = id('player');
+        var width = playlist.offsetLeft + playlist.offsetWidth;
+        var height = window.innerHeight;
+        // move playlist down for vertical layout
+        if (height > width) {
+          id('bottomplaylist').innerHTML = id('files').innerHTML;
+          id('files').className = 'shifted';
+        } else {
+          id('bottomplaylist').innerHTML = '';
+          id('files').className = '';
+        } // adjust to dual playlist for tall layout
+        // resize window width
+        var realsize = player.width; // right shifts but player overflows
+        var availablesize = width - playlist.offsetWidth;
+        var newscale = Math.floor(availablesize / realsize * 100) / 100;
+        var newshift = Math.floor(0 - ((realsize / 1.4) * (1 - newscale)));
+        var bottomheight = id('bottomplaylist').offsetHeight;
+        var downshift = Math.floor(0 - ((bottomheight * 2.0) * (1 - newscale)));
+        var newtransform = 'scale(' + newscale  +   ')'
+                   + ' translateX(' + newshift  + 'px)'
+                   + ' translateY(' + downshift + 'px)';
+        id('window').style.transform = newtransform;
+      }
+      function file(number) {
+        var files = id('files');
+        var file = files.firstElementChild;
+        while (file) {
+          var thisnumber = file.innerHTML.split('<')[0];
+          if (thisnumber == number) { return file; }
+          file = file.nextElementSibling;
+        }
+        return null;
+      }
       function setplayersrc(path) {
         var player = id('player');
         var sources = player.getElementsByTagName('source');
@@ -48,41 +138,49 @@
       var currentindex = 0;
       var currentfile = null;
       function next(prev) {
-        if (currentfile && id(currentfile)) {
-          id(currentfile).className = 'item';
+        if (prev == window.event) {
+          prev = prev.target;
+          while (!prev.innerHTML)
+            { prev = prev.parentElement; } // cascade up empty inputs
+          prev = prev.innerHTML.split('<')[0];
+        }
+        if (currentfile) {
+          currentfile.className = '';
         } // deselect previous item
-        currentindex = currentindex + ((prev) ? -1 : 1);
-        var nextfile = 'file' + currentindex;
-        if (!id(nextfile)) {
-          if (prev) { // expect file0 -- first prev -> last
-            var newfile = 'file' + (currentindex + 1);
-            while (id(newfile)) { // from file1 to lastfile
-              nextfile = newfile; // align with next
-              newfile = 'file' + (++currentindex + 1);
-            } // until next no more (stops at lastfile)
-          } else { nextfile = 'file1'; currentindex = 1; }
-        } // loop playlist
-        currentfile = nextfile;
-        console.log('currentfile set to ' + currentfile);
-        if (!id(currentfile)) { console.log('no file ' + currentfile); }
-        id(currentfile).className = 'item selected';
-        var filepath = id('source').value;
-        var fileext = id('extension').value;
-        var filename = id(currentfile).value;
-        if (!filepath) { console.log('error: no filepath');  }
-        else if (!fileext ) { console.log('error: no fileext');  }
-        else if (!filename) { console.log('error: no filename'); }
-        else { // expect no spaces or special chars in source value text
-          var filesrc = filename.split(' ').join('%20');
-          filesrc = filesrc.split('[').join('%5B');
-          filesrc = filesrc.split(']').join('%5D');
-          filesrc = filesrc.concat(fileext).concat('?raw=true');
-          setplayersrc(filepath + filesrc);
+        if (prev > 0) { // set by number
+          currentindex = prev;          
+          currentfile = file(prev);
+        } else { // next and prev
+          currentindex = currentindex + ((prev < 0) ? -1 : 1);
+          if (!file(currentindex)) {
+            if (prev) { // expect file0 -- first prev -> last
+              while (file(currentindex + 1)) { ++currentindex; }
+            } else { currentindex = 1; }
+          } // loop playlist
+          currentfile = file(currentindex);
+        } // end of next and prev handler
+        if (!currentfile) { console.log('no file'); id('player').pause(); }
+        else {
+          console.log('currentfile set to ' + currentfile.firstElementChild.value);
+          currentfile.className = 'selected';
+          var filepath = id('source').value;
+          var fileext = id('extension').value;
+          var filename = currentfile.firstElementChild.value;
+          if (!filepath) { console.log('error: no filepath');  }
+          else if (!fileext ) { console.log('error: no fileext');  }
+          else if (!filename) { console.log('error: no filename'); }
+          else { // expect no spaces or special chars in source value text
+            var filesrc = filename.split(' ').join('%20');
+            filesrc = filesrc.split('[').join('%5B');
+            filesrc = filesrc.split(']').join('%5D');
+            filesrc = filesrc.concat(fileext).concat('?raw=true');
+            setplayersrc(filepath + filesrc);
+          }
         }
       }
     </script>
   </head>
-  <body><center>
+  <body>
     <div id="playlist">
       <input id="source" type="text" class="path"
         value="https://github.com/c-20/alias/blob/main/" />
@@ -90,21 +188,16 @@
         <input id="extension" type="text" value=".mp4" />
       </div>
       <br />
-      <div class="files">
-        <input id="file1" type="text" class="item"
-          value="Diablo I  II Soundtrack - Tristram Village" />
-        <br />
-        <input id="file2" type="text" class="item"
-          value="In Flames - Delight and Angers (Instrumental Version)" />
-        <br />
-        <input id="file3" type="text" class="item"
-          value="Tyga Ft Game - Switch Lanes (Instrumental)" />
-        <br />
-        <input id="file4" type="text" class="item"
-          value="Noisestorm - Crab Rave" />
-        <br />
-        <input id="file5" type="text" class="item"
-          value="In Flames - Stay With Me [Lyrics in Video]" />
+      <div class="prevnext">
+        <input type="button" value="Prev" onclick="next(-1);" />
+        <input type="button" value="Next" onclick="next(0);" />
+      </div>
+      <div id="files" onclick="next(event);">
+<div>1<input type="text" value="Diablo I  II Soundtrack - Tristram Village" /></div>
+<div>2<input type="text" value="In Flames - Delight and Angers (Instrumental Version)" /></div>
+<div>3<input type="text" value="Moxura - Paradise  🌴" /></div>
+<div>4<input type="text" value="Noisestorm - Crab Rave" /></div>
+<div>5<input type="text" value="In Flames - Stay With Me [Lyrics in Video]" /></div>
       </div>
     </div>
     <div id="window">
@@ -112,16 +205,14 @@
       <video id="player" width="640" height="480" controls autoplay>
         No video.
       </video>
-      <br /><br />
-      <input type="button" value="&Prev" onclick="next(1);" />
-      &nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="button" value="&Next" onclick="next(0);" />
-      <br />
     </div>
+    <div id="bottomplaylist" onclick="next(event);"></div>
     <script type="text/javascript">
       next(0); // set to file1
       id('player').addEventListener('ended', next);
       id('player').play();
+      window.addEventListener('keydown', key, true);
+      window.addEventListener('resize', size, true);
     </script>
-  </center></body>
+  </body>
 </html>
