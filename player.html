@@ -186,6 +186,15 @@
       }
       function nextfile() { next(0);  }
       function prevfile() { next(-1); }
+      function initplayer() {
+        var target = 0; // next to file 1
+        var loc = window.location.href;
+        var suffix = loc.split('#');
+        if (suffix.length == 2) {
+          target = parseInt(suffix);
+        }
+        next(target);
+      }
     </script>
   </head>
   <body>
@@ -211,6 +220,8 @@
 <div>8<input type="text" value="Lil Dicky - Professional Rapper (Feat  Snoop Dogg) LYRICS" /></div>
 <div>9<input type="text" value="Infected Mushroom-Classical Mushroom-None Of This Is Real" /></div>
 <div>10<input type="text" value="Music Video Snoop Dogg - Executive Branch" /></div>
+<div>11<input type="text" value="Talking Heads - Wild Wild Life - Karaoke" /></div>
+<div>12<input type="text" value="Talking Heads - Life During Wartime (Karaoke Version)" /></div>
       </div>
     </div>
     <div id="window">
@@ -221,7 +232,7 @@
     </div>
     <div id="bottomplaylist" onclick="next(event);"></div>
     <script type="text/javascript">
-      next(0); // set to file1
+      initplayer();
       id('player').addEventListener('ended', nextfile, true);
       id('player').play();
       window.addEventListener('keydown', key, true);
