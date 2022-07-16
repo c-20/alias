@@ -1,0 +1,120 @@
+<html>
+  <meta charset="UTF-8" />
+  <head>
+    <title>player()</title>
+    <style type="text/css">
+      #window {
+        position: absolute; background-color: #444;
+        top: 0; bottom: 0; left: 0; right: 30%;
+      }
+      #playlist {
+        position: absolute; z-index: 1; background-color: #ddd;
+        top: 0; bottom: 0; left: 70%; right: 0;
+        padding: 4px; text-align: left;
+      }
+      #playlist > .files {
+        margin-top: 6px; padding-top: 6px; padding-right: 4px;
+        border-top: #aaa solid 2px; text-align: right;
+      }
+      #playlist > .path { border: #fc3 solid 1px; width: 80%; }
+      #playlist > .extension {
+        float: right; text-align: right; width: 14%;
+      }
+      #playlist > .extension > input {
+        border: #fc3 solid 1px; width: 95%;
+      }
+      #playlist > .files > .item {
+        text-align: right; border: #777 solid 1px; width: 95%;
+      }
+      #playlist > .files > .selected {
+        text-align: left; border: #fc3 solid 1px;
+      }
+    </style>
+    <script type="text/javascript">
+      function id(id) { return document.getElementById(id); }
+      function setplayersrc(path) {
+        var player = id('player');
+        var sources = player.getElementsByTagName('source');
+        var thesrc = sources[0];
+        if (!thesrc) {
+          thesrc = document.createElement('source');
+          thesrc.setAttribute('type', 'video/mp4');
+          player.appendChild(thesrc);
+        }
+        thesrc.setAttribute('src', path);
+        player.load();
+        player.play();
+      }
+      var currentindex = 0;
+      var currentfile = null;
+      function next(prev) {
+        if (currentfile && id(currentfile)) {
+          id(currentfile).className = 'item';
+        } // deselect previous item
+        currentindex = currentindex + ((prev) ? -1 : 1);
+        var nextfile = 'file' + currentindex;
+        if (!id(nextfile)) {
+          if (prev) { // expect file0 -- first prev -> last
+            var newfile = 'file' + (currentindex + 1);
+            while (id(newfile)) { // from file1 to lastfile
+              nextfile = newfile; // align with next
+              newfile = 'file' + (++currentindex + 1);
+            } // until next no more (stops at lastfile)
+          } else { nextfile = 'file1'; currentindex = 1; }
+        } // loop playlist
+        currentfile = nextfile;
+        console.log('currentfile set to ' + currentfile);
+        if (!id(currentfile)) { console.log('no file ' + currentfile); }
+        id(currentfile).className = 'item selected';
+        var filepath = id('source').value;
+        var fileext = id('extension').value;
+        var filename = id(currentfile).value;
+        if (!filepath) { console.log('error: no filepath');  }
+        else if (!fileext ) { console.log('error: no fileext');  }
+        else if (!filename) { console.log('error: no filename'); }
+        else { // expect no spaces or special chars in source value text
+          var filesrc = filename.split(' ').join('%20');
+          filesrc = filesrc.split('[').join('%5B');
+          filesrc = filesrc.split(']').join('%5D');
+          filesrc = filesrc.concat(fileext).concat('?raw=true');
+          setplayersrc(filepath + filesrc);
+        }
+      }
+    </script>
+  </head>
+  <body><center>
+    <div id="playlist">
+      <input id="source" type="text" class="path"
+        value="https://github.com/c-20/alias/blob/main/" />
+      <div class="extension">
+        <input id="extension" type="text" value=".mp4" />
+      </div>
+      <br />
+      <div class="files">
+        <input id="file1" type="text" class="item"
+          value="In Flames - Stay With Me [Lyrics in Video]" />
+        <br />
+        <input id="file2" type="text" class="item"
+          value="In Flames - Delight and Angers (Instrumental Version)" />
+        <br />
+        <input id="file3" type="text" class="item"
+          value="Tyga Ft Game - Switch Lanes (Instrumental)" />
+      </div>
+    </div>
+    <div id="window">
+      <br /><br />
+      <video id="player" width="640" height="480" controls autoplay>
+        No video.
+      </video>
+      <br /><br />
+      <input type="button" value="&Prev" onclick="next(1);" />
+      <input type="button" value="&Next" onclick="next(0);" />
+      <br />
+    </div>
+    <script type="text/javascript">
+      next(0); // set to file1
+      id('player').addEventListener('ended', next);
+      id('player').play();
+    </script>
+  </center></body>
+</html>
