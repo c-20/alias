@@ -27,7 +27,7 @@
       #playlist > #files > div,
       #bottomplaylist > div {
         background-color: #bbb; border-radius: 4px;
-        border: #aaa solid 1px; padding: 8px; font-size: large;
+        border: #aaa solid 1px; padding: 4px; font-size: large;
         margin-bottom: 1px;
       }
       #playlist > #files > div:hover,
@@ -60,12 +60,13 @@
         margin-top: 4px; padding-top: 4px;
       }
       #playlist > .prevnext > input {
-        width: 66px; height: 66px; border-radius: 6px;
+        width: 88px; height: 55px;
       }
       #bottomplaylist {
         position: absolute; border-top: #aaa solid 2px;
         left: 0; right: 0; bottom: 0; z-index: 2;
         background-color: #ddd;
+        max-height: 66%; overflow: auto;
       }
     </style>
     <script type="text/javascript">
@@ -222,6 +223,8 @@
 <div>10<input type="text" value="Music Video Snoop Dogg - Executive Branch" /></div>
 <div>11<input type="text" value="Talking Heads - Wild Wild Life - Karaoke" /></div>
 <div>12<input type="text" value="Talking Heads - Life During Wartime (Karaoke Version)" /></div>
+<div>13<input type="text" value="P.O.D. • Alive (CC) [Karaoke Instrumental Lyrics]" /></div>
+<div>14<input type="text" value="PUSHING ME AWAY - LINKIN PARK (karaoke version)" /></div>
       </div>
     </div>
     <div id="window">
