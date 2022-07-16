@@ -3,6 +3,7 @@
   <head>
     <title>player()</title>
     <style type="text/css">
+      html, body { width: 100%; height: 100%; overflow: hidden; }
       body { background-color: #444; }
       #window {
         position: absolute; background-color: #444;
@@ -27,7 +28,6 @@
       #bottomplaylist > div:hover {
         cursor: pointer; background-color: #fcb;
       }
-
       #playlist > #files > div.selected,
       #bottomplaylist > div.selected {
         background-color: #fc3;
@@ -36,20 +36,12 @@
       #bottomplaylist > div.selected:hover {
         cursor: pointer; background-color: #fc7;
       }
-
-
       #playlist > #files > div > input,
       #bottomplaylist > div > input {
         text-align: right; border: #777 solid 1px; width: 85%;
         float: right; margin-left: 5%; padding-right: 6px;
       }
       #playlist > #files.shifted > div > input { display: none; }
-
-/* not yet used -- select to edit the text !
-      #playlist > #files > div > input.selected {
-        text-align: left; border: #fc3 solid 1px;
-      }
-*/
       #playlist > .path { border: #fc3 solid 1px; width: 80%; }
       #playlist > .extension {
         float: right; text-align: right; width: 15%;
@@ -132,8 +124,12 @@
           player.appendChild(thesrc);
         }
         thesrc.setAttribute('src', path);
-        player.load();
-        player.play();
+        try {
+          player.load();
+          player.play();
+        } catch (e) {
+          nextfile();
+        }
       }
       var currentindex = 0;
       var currentfile = null;
@@ -142,7 +138,7 @@
           prev = prev.target;
           while (!prev.innerHTML)
             { prev = prev.parentElement; } // cascade up empty inputs
-          prev = prev.innerHTML.split('<')[0];
+          prev = parseInt(prev.innerHTML.split('<')[0]);
         }
         if (currentfile) {
           currentfile.className = '';
@@ -153,7 +149,8 @@
         } else { // next and prev
           currentindex = currentindex + ((prev < 0) ? -1 : 1);
           if (!file(currentindex)) {
-            if (prev) { // expect file0 -- first prev -> last
+            if (prev) { // expect/presume file0 -- first prev -> last
+              currentindex = 0;
               while (file(currentindex + 1)) { ++currentindex; }
             } else { currentindex = 1; }
           } // loop playlist
@@ -178,6 +175,8 @@
           }
         }
       }
+      function nextfile() { next(0);  }
+      function prevfile() { next(-1); }
     </script>
   </head>
   <body>
@@ -189,8 +188,8 @@
       </div>
       <br />
       <div class="prevnext">
-        <input type="button" value="Prev" onclick="next(-1);" />
-        <input type="button" value="Next" onclick="next(0);" />
+        <input type="button" value="Prev" onclick="prevfile();" />
+        <input type="button" value="Next" onclick="nextfile();" />
       </div>
       <div id="files" onclick="next(event);">
 <div>1<input type="text" value="Diablo I  II Soundtrack - Tristram Village" /></div>
@@ -199,6 +198,8 @@
 <div>4<input type="text" value="Noisestorm - Crab Rave" /></div>
 <div>5<input type="text" value="In Flames - Stay With Me [Lyrics in Video]" /></div>
 <div>6<input type="text" value="ZHU - Faded" /></div>
+<div>7<input type="text" value="Talking Heads - Sax And Violins KARAOKE" /></div>
+<div>8<input type="text" value="Lil Dicky - Professional Rapper (Feat  Snoop Dogg) LYRICS" /></div>
       </div>
     </div>
     <div id="window">
@@ -210,7 +211,7 @@
     <div id="bottomplaylist" onclick="next(event);"></div>
     <script type="text/javascript">
       next(0); // set to file1
-      id('player').addEventListener('ended', next);
+      id('player').addEventListener('ended', nextfile, true);
       id('player').play();
       window.addEventListener('keydown', key, true);
       window.addEventListener('resize', size, true);
