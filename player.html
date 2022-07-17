@@ -27,7 +27,7 @@
       #playlist > #files > div,
       #bottomplaylist > div {
         background-color: #bbb; border-radius: 4px;
-        border: #aaa solid 1px; padding: 4px; font-size: large;
+        border: #aaa solid 1px; padding: 3px; font-size: large;
         margin-bottom: 1px;
       }
       #playlist > #files > div:hover,
@@ -45,7 +45,7 @@
       #playlist > #files > div > input,
       #bottomplaylist > div > input {
         text-align: right; border: #777 solid 1px; width: 85%;
-        float: right; margin-left: 5%; padding-right: 6px;
+        float: right; margin-left: 3%; padding-right: 6px;
       }
       #playlist > #files.shifted > div > input { display: none; }
       #playlist > .path { border: #fc3 solid 1px; width: 80%; }
@@ -61,6 +61,9 @@
       }
       #playlist > .prevnext > input {
         width: 88px; height: 55px;
+      }
+      #playlist > .prevnext > input:hover {
+        cursor: pointer; background-color: #fc7;
       }
       #bottomplaylist {
         position: absolute; border-top: #aaa solid 2px;
@@ -80,12 +83,13 @@
             if (code == 48) { keys = []; } // read a sequence
             else { next(code - 48); } // set to file 1-9
           } else { keys.push(code - 48); } // append sequence
-        } else if (keys) {
-          if (code == 13) { // enter key registers key
-            var key = keys.join('');
+        }
+        if (code == 13 || keys.length == 2) { // stop at 99
+          if (keys.length == 2) { // stop at 99
+            var key = parseInt(keys.join(''));
             console.log('key is ' + key);
             next(key); // is it a number or a string?
-            keys = null; // reset mode
+            keys = null; // reset mode            
           } else { keys = null; } // anything else resets mode
         }
       }
@@ -192,8 +196,9 @@
         var loc = window.location.href;
         var suffix = loc.split('#');
         if (suffix.length == 2) {
-          target = parseInt(suffix);
+          target = parseInt(suffix[1]);
         }
+        console.log('target is ' + target);
         next(target);
       }
     </script>
@@ -224,7 +229,7 @@
 <div>11<input type="text" value="Talking Heads - Wild Wild Life - Karaoke" /></div>
 <div>12<input type="text" value="Talking Heads - Life During Wartime (Karaoke Version)" /></div>
 <div>13<input type="text" value="P.O.D. • Alive (CC) [Karaoke Instrumental Lyrics]" /></div>
-<div>14<input type="text" value="PUSHING ME AWAY - LINKIN PARK (karaoke version)" /></div>
+<div>99<input type="text" value="PUSHING ME AWAY - LINKIN PARK (karaoke version)" /></div>
       </div>
     </div>
     <div id="window">
@@ -238,6 +243,7 @@
       initplayer();
       id('player').addEventListener('ended', nextfile, true);
       id('player').play();
+      window.addEventListener('hashchange', initplayer);
       window.addEventListener('keydown', key, true);
       window.addEventListener('resize', size, true);
     </script>
