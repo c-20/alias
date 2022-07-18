@@ -1,3 +1,7 @@
+# player
+
+https://htmlpreview.github.io/?https://github.com/c-20/alias/blob/main/player.html
+
 # alias
 how to steal a password
 
